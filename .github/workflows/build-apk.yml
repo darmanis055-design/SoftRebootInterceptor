@@ -13,24 +13,36 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Java 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
 
       - name: Configure Android SDK
         run: |
-          echo "ANDROID_HOME=$ANDROID_HOME"
           echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> "$GITHUB_ENV"
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "platforms;android-37" "build-tools;37.0.0"
-          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
+          "$ANDROID_HOME/cmdline-tools/16.0/bin/sdkmanager" --install "platforms;android-36" "build-tools;36.0.0"
+          yes | "$ANDROID_HOME/cmdline-tools/16.0/bin/sdkmanager" --licenses >/dev/null || true
 
-      - name: Extract Android project
+      - name: Extract and adapt Android project
         run: |
           unzip -q SoftRebootInterceptor-cloud-build.zip
-          test -f libxposed-example/gradlew
-          test -d libxposed-example/app
-          chmod +x libxposed-example/gradlew
+          cd libxposed-example
+          test -f gradlew
+          test -d app
+          chmod +x gradlew
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("app/build.gradle.kts")
+          s = p.read_text()
+          s = s.replace("compileSdk = 37", "compileSdk = 36")
+          s = s.replace('buildToolsVersion = "37.0.0"', 'buildToolsVersion = "36.0.0"')
+          s = s.replace("targetSdk = 37", "targetSdk = 36")
+          p.write_text(s)
+          p = Path("gradle/libs.versions.toml")
+          s = p.read_text().replace('xposed-api = "102.0.0"', 'xposed-api = "101.0.0"').replace('xposed-service = "102.0.0"', 'xposed-service = "101.0.0"')
+          p.write_text(s)
+          PY
 
       - name: Build debug APK
         working-directory: libxposed-example
