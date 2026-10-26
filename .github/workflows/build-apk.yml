@@ -63,9 +63,6 @@ jobs:
           s = s.replace('buildToolsVersion = "37.0.0"', 'buildToolsVersion = "36.0.0"')
           s = s.replace("targetSdk = 37", "targetSdk = 36")
           p.write_text(s)
-          p = Path("gradle/libs.versions.toml")
-          s = p.read_text().replace('xposed-api = "102.0.0"', 'xposed-api = "101.0.0"').replace('xposed-service = "102.0.0"', 'xposed-service = "101.0.0"')
-          p.write_text(s)
           PY
 
       - name: Build debug APK
